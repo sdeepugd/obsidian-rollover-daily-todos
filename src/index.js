@@ -122,9 +122,11 @@ export default class RolloverTodosPlugin extends Plugin {
   async getAllUnfinishedTodos(file) {
     const dn = await this.app.vault.read(file);
     const dnLines = dn.split(/\r?\n|\r|\n/g);
-
+    let tempHeading = this.settings.templateHeading;
+    console.log("templateHeading", tempHeading);
     return getTodos({
       lines: dnLines,
+      templateHeading: tempHeading,
       withChildren: this.settings.rolloverChildren,
     });
   }
@@ -356,6 +358,14 @@ export default class RolloverTodosPlugin extends Plugin {
         this.rollover(file);
       })
     );
+
+    // This creates an icon in the left ribbon.
+    const ribbonIconEl = this.addRibbonIcon("dice", "RollOver", (evt) => {
+      // Called when the user clicks the icon.
+      this.rollover();
+    });
+    // Perform additional things with the ribbon
+    ribbonIconEl.addClass("my-plugin-ribbon-class");
 
     this.addCommand({
       id: "obsidian-rollover-daily-todos-rollover",

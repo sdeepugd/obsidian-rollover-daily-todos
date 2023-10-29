@@ -5,14 +5,25 @@ class TodoParser {
   // Boolean that encodes whether nested items should be rolled over
   #withChildren;
 
-  constructor(lines, withChildren) {
+  #templateHeading;
+
+  constructor(lines, templateHeading, withChildren) {
     this.#lines = lines;
+    this.#templateHeading = templateHeading;
     this.#withChildren = withChildren;
   }
 
   // Returns true if string s is a todo-item
   #isTodo(s) {
     const r = /\s*- \[ \].*/g;
+    return r.test(s);
+  }
+
+  // Returns true if string s is a todo-item
+  //- [x]
+  #isTodoChecked(s) {
+    console.log(s);
+    const r = /- \[x\]/;
     return r.test(s);
   }
 
@@ -53,18 +64,44 @@ class TodoParser {
     return this.#lines[l].search(/\S/);
   }
 
+  #getHeadingLevel(heading) {
+    const headingLevelstr = heading.split(" ")[0];
+    let currHeadingLevel = headingLevelstr.length;
+    return currHeadingLevel;
+  }
+
   // Returns a list of strings that represents all the todos along with there potential children
   getTodos() {
     let todos = [];
+    let headingFound = false;
+    let headingLevel = this.#getHeadingLevel(this.#templateHeading);
     for (let l = 0; l < this.#lines.length; l++) {
       const line = this.#lines[l];
-      if (this.#isTodo(line)) {
-        todos.push(line);
-        if (this.#withChildren && this.#hasChildren(l)) {
-          const cs = this.#getChildren(l);
-          todos = [...todos, ...cs];
-          l += cs.length;
+
+      if (headingFound) {
+        if (line.startsWith("#")) {
+          const words = line.split(" ");
+          if (words.length > 1) {
+            console.log(line);
+            let currentHeadingLevel = this.#getHeadingLevel(line);
+            if (currentHeadingLevel <= headingLevel) {
+              headingFound = false;
+              break;
+            } else {
+              todos.push(line);
+            }
+          }
+        } else {
+          if (!this.#isTodoChecked(line)) {
+            todos.push(line);
+          }
         }
+      }
+
+      if (this.#templateHeading === line) {
+        console.log("heading found");
+        headingFound = true;
+        continue;
       }
     }
     return todos;
@@ -72,7 +109,11 @@ class TodoParser {
 }
 
 // Utility-function that acts as a thin wrapper around `TodoParser`
-export const getTodos = ({ lines, withChildren = false }) => {
-  const todoParser = new TodoParser(lines, withChildren);
+export const getTodos = ({
+  lines,
+  templateHeading = null,
+  withChildren = false,
+}) => {
+  const todoParser = new TodoParser(lines, templateHeading, withChildren);
   return todoParser.getTodos();
 };
