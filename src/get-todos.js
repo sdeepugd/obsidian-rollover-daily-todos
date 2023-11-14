@@ -70,6 +70,23 @@ class TodoParser {
     return currHeadingLevel;
   }
 
+  #findStringDifferences(str1, str2) {
+    const differences = [];
+    const maxLength = Math.max(str1.length, str2.length);
+
+    for (let i = 0; i < maxLength; i++) {
+      if (str1[i] !== str2[i]) {
+        differences.push({
+          index: i,
+          char1: str1[i] || "",
+          char2: str2[i] || "",
+        });
+      }
+    }
+
+    return differences;
+  }
+
   // Returns a list of strings that represents all the todos along with there potential children
   getTodos() {
     let todos = [];
@@ -77,7 +94,7 @@ class TodoParser {
     let headingLevel = this.#getHeadingLevel(this.#templateHeading);
     for (let l = 0; l < this.#lines.length; l++) {
       const line = this.#lines[l];
-
+      console.log(this.#templateHeading, line);
       if (headingFound) {
         if (line.startsWith("#")) {
           const words = line.split(" ");
@@ -96,9 +113,7 @@ class TodoParser {
             todos.push(line);
           }
         }
-      }
-
-      if (this.#templateHeading === line) {
+      } else if (this.#templateHeading === line) {
         console.log("heading found");
         headingFound = true;
         continue;
